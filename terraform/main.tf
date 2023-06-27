@@ -190,7 +190,7 @@ resource "aws_security_group" "de_proj_2_emr_sg" {
 #Set up EMR
 resource "aws_emr_cluster" "proj_emr_cluster" {
   name                   = "proj_emr_cluster"
-  release_label          = "emr-6.2.0"
+  release_label          = "emr-6.5.0"
   applications           = ["Spark", "Hadoop"]
   scale_down_behavior    = "TERMINATE_AT_TASK_COMPLETION"
   service_role           = "EMR_DefaultRole"

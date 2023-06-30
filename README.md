@@ -2,8 +2,8 @@
 
 This repo originated from [ankurchavda](https://github.com/ankurchavda/streamify), and I'm trying to replace the GCP infrastructure with AWS infrastructure and learn various services like Kafka and Spark Streaming in the process. It is still in progress and not yet completed.
 
-
-
+## Original Architecture
+![Alt text](img/Streamify-Architecture-Original.jpg?raw=true "Check Eventsim success or not")
 
 # Steps
 

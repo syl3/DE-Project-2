@@ -1,6 +1,6 @@
-apache-airflow-providers-google
+apache-airflow-providers-amazon
 pyarrow
 pandas
 sqlalchemy
 psycopg2-binary
-dbt-bigquery==1.0.0
+dbt-redshift

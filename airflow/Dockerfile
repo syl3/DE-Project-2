@@ -10,12 +10,11 @@ RUN apt-get update && \
     apt-get install -y git
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+USER $AIRFLOW_UID
+RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Ref: https://airflow.apache.org/docs/docker-stack/recipes.html
 
 SHELL ["/bin/bash", "-o", "pipefail", "-e", "-u", "-x", "-c"]
 
 WORKDIR $AIRFLOW_HOME
-
-USER $AIRFLOW_UID

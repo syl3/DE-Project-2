@@ -2,13 +2,15 @@ import os
 import pyarrow.csv as pv
 import pyarrow.parquet as pq
 from datetime import datetime
+import psycopg2
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryCreateExternalTableOperator,
-)
+from airflow.operators.postgres_operator import PostgresOperator
+from airflow.hooks.postgres_hook import PostgresHook
+from airflow.hooks.S3_hook import S3Hook
+from airflow.models import Variable
 
 
 from google.cloud import storage
@@ -26,36 +28,28 @@ CSV_OUTFILE = f'{AIRFLOW_HOME}/{CSV_FILENAME}'
 PARQUET_OUTFILE = f'{AIRFLOW_HOME}/{PARQUET_FILENAME}'
 TABLE_NAME = 'songs'
 
-GCP_PROJECT_ID = os.environ.get('GCP_PROJECT_ID')
-GCP_GCS_BUCKET = os.environ.get('GCP_GCS_BUCKET')
-BIGQUERY_DATASET = os.environ.get('BIGQUERY_DATASET', 'streamify_stg')
+BUCKET_NAME = Variable.get("BUCKET")
 
 
 def convert_to_parquet(csv_file, parquet_file):
     if not csv_file.endswith('csv'):
         raise ValueError('The input file is not in csv format')
 
-    # Path(f'{AIRFLOW_HOME}/fhv_tripdata/parquet').mkdir(parents=True, exist_ok=True)
-
     table = pv.read_csv(csv_file)
     pq.write_table(table, parquet_file)
 
 
-def upload_to_gcs(file_path, bucket_name, blob_name):
+def upload_to_s3(
+    bucket_name: str, key: str, file_name: str, remove_local: bool = False
+) -> None:
     """
-    Upload the downloaded file to GCS
+    Upload the downloaded file to S3
     """
-    # WORKAROUND to prevent timeout for files > 6 MB on 800 kbps upload speed.
-    # (Ref: https://github.com/googleapis/python-storage/issues/74)
-
-    # storage.blob._MAX_MULTIPART_SIZE = 5 * 1024 * 1024  # 5 MB
-    # storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024 * 1024  # 5 MB
-
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-
-    blob = bucket.blob(blob_name)
-    blob.upload_from_filename(file_path)
+    s3 = S3Hook()
+    s3.load_file(filename=file_name, bucket_name=bucket_name, replace=True, key=key)
+    if remove_local:
+        if os.path.isfile(file_name):
+            os.remove(file_name)
 
 
 with DAG(
@@ -78,13 +72,14 @@ with DAG(
         op_kwargs={'csv_file': CSV_OUTFILE, 'parquet_file': PARQUET_OUTFILE},
     )
 
-    upload_to_gcs_task = PythonOperator(
-        task_id='upload_to_gcs',
-        python_callable=upload_to_gcs,
+    upload_to_s3_task = PythonOperator(
+        task_id='upload_to_s3',
+        python_callable=upload_to_s3,
         op_kwargs={
-            'file_path': PARQUET_OUTFILE,
-            'bucket_name': GCP_GCS_BUCKET,
-            'blob_name': f'{TABLE_NAME}/{PARQUET_FILENAME}',
+            "file_name": PARQUET_OUTFILE,
+            "key": f"stage/{TABLE_NAME}/{PARQUET_FILENAME}",
+            "bucket_name": BUCKET_NAME,
+            "remove_local": "true",
         },
     )
 
@@ -93,25 +88,17 @@ with DAG(
         bash_command=f'rm {CSV_OUTFILE} {PARQUET_OUTFILE}',
     )
 
-    create_external_table_task = BigQueryCreateExternalTableOperator(
-        task_id=f'create_external_table',
-        table_resource={
-            'tableReference': {
-                'projectId': GCP_PROJECT_ID,
-                'datasetId': BIGQUERY_DATASET,
-                'tableId': TABLE_NAME,
-            },
-            'externalDataConfiguration': {
-                'sourceFormat': 'PARQUET',
-                'sourceUris': [f'gs://{GCP_GCS_BUCKET}/{TABLE_NAME}/*.parquet'],
-            },
-        },
+    create_external_table_task = PostgresOperator(
+        dag=dag,
+        task_id="create_external_table",
+        sql="sql/tmp.sql",
+        postgres_conn_id="redshift",
     )
 
     (
         download_songs_file_task
         >> convert_to_parquet_task
-        >> upload_to_gcs_task
+        >> upload_to_s3_task
         >> remove_files_from_local_task
         >> create_external_table_task
     )

@@ -25,3 +25,22 @@ variable "auto_termination_timeoff" {
   type        = number
   default     = 14400 # 4 hours
 }
+
+## AWS Redshift credentials and node type
+variable "redshift_user" {
+  description = "AWS user name for Redshift"
+  type        = string
+  default     = "sde_user"
+}
+
+variable "redshift_password" {
+  description = "AWS password for Redshift"
+  type        = string
+  default     = "sdeP0ssword0987"
+}
+
+variable "redshift_node_type" {
+  description = "AWS Redshift node  type"
+  type        = string
+  default     = "dc2.large"
+}

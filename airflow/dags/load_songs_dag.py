@@ -7,14 +7,9 @@ import psycopg2
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.operators.postgres_operator import PostgresOperator
-from airflow.hooks.postgres_hook import PostgresHook
 from airflow.hooks.S3_hook import S3Hook
 from airflow.models import Variable
-
-
-from google.cloud import storage
-from schema import schema
+from airflow.providers.amazon.aws.operators.redshift_sql import RedshiftSQLOperator
 
 default_args = {'owner': 'airflow'}
 
@@ -39,17 +34,12 @@ def convert_to_parquet(csv_file, parquet_file):
     pq.write_table(table, parquet_file)
 
 
-def upload_to_s3(
-    bucket_name: str, key: str, file_name: str, remove_local: bool = False
-) -> None:
+def upload_to_s3(bucket_name: str, key: str, file_name: str) -> None:
     """
     Upload the downloaded file to S3
     """
     s3 = S3Hook()
     s3.load_file(filename=file_name, bucket_name=bucket_name, replace=True, key=key)
-    if remove_local:
-        if os.path.isfile(file_name):
-            os.remove(file_name)
 
 
 with DAG(
@@ -88,11 +78,11 @@ with DAG(
         bash_command=f'rm {CSV_OUTFILE} {PARQUET_OUTFILE}',
     )
 
-    create_external_table_task = PostgresOperator(
+    create_external_table_task = RedshiftSQLOperator(
         dag=dag,
         task_id="create_external_table",
-        sql="sql/tmp.sql",
-        postgres_conn_id="redshift",
+        sql="sql/create_external_table.sql",
+        redshift_conn_id="redshift",
     )
 
     (

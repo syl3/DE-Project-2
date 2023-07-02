@@ -19,4 +19,4 @@ CREATE EXTERNAL TABLE spectrum.songs (
     title VARCHAR(100),
     track_id VARCHAR(100),
     year BIGINT
-) STORED AS PARQUET LOCATION 's3://proj-data-lake-20230702074322312800000001/stage/songs/';
+) STORED AS PARQUET LOCATION '{{ params.bucket_name }}';

@@ -1,3 +1,19 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
+    }
+    redshift = {
+      source  = "brainly/redshift"
+      version = "1.0.2"
+    }
+  }
+
+  required_version = ">= 1.2.0"
+}
+
+
 provider "aws" {
   region  = var.aws_region
   profile = "terraform"
@@ -165,72 +181,129 @@ resource "aws_s3_bucket_acl" "proj-data-lake-acl" {
 
 
 
-resource "aws_security_group" "de_proj_2_emr_sg" {
-  name        = "de_proj_2_emr_sg"
-  description = "de_proj_2 emr security group"
-  vpc_id      = aws_vpc.de_proj_2_vpc.id
+# resource "aws_security_group" "de_proj_2_emr_sg" {
+#   name        = "de_proj_2_emr_sg"
+#   description = "de_proj_2 emr security group"
+#   vpc_id      = aws_vpc.de_proj_2_vpc.id
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+#   ingress {
+#     from_port   = 22
+#     to_port     = 22
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+# }
+
+
+
+
+# #Set up EMR
+# resource "aws_emr_cluster" "proj_emr_cluster" {
+#   name                   = "proj_emr_cluster"
+#   release_label          = "emr-6.5.0"
+#   applications           = ["Spark", "Hadoop"]
+#   scale_down_behavior    = "TERMINATE_AT_TASK_COMPLETION"
+#   service_role           = "EMR_DefaultRole"
+#   termination_protection = false
+#   auto_termination_policy {
+#     idle_timeout = var.auto_termination_timeoff
+#   }
+
+#   ec2_attributes {
+#     instance_profile = aws_iam_instance_profile.proj_ec2_iam_role_instance_profile.id
+
+#     subnet_id = aws_subnet.de_proj_2_public_subnet.id
+#     key_name  = aws_key_pair.de_proj_2_auth.id
+
+#     additional_master_security_groups = aws_security_group.de_proj_2_emr_sg.id
+#     additional_slave_security_groups  = aws_security_group.de_proj_2_emr_sg.id
+#   }
+
+
+#   master_instance_group {
+#     instance_type  = var.instance_type
+#     instance_count = 1
+#     name           = "Master - 1"
+
+#     ebs_config {
+#       size                 = 32
+#       type                 = "gp2"
+#       volumes_per_instance = 2
+#     }
+#   }
+
+#   core_instance_group {
+#     instance_type  = var.instance_type
+#     instance_count = 2
+#     name           = "Core - 2"
+
+#     ebs_config {
+#       size                 = "32"
+#       type                 = "gp2"
+#       volumes_per_instance = 2
+#     }
+#   }
+# }
+
+
+
+# IAM role for Redshift to be able to read data from S3 via Spectrum
+resource "aws_iam_role" "proj_redshift_iam_role" {
+  name = "sde_redshift_iam_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "redshift.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess", "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess"]
 }
 
 
+# Set up Redshift
+resource "aws_redshift_cluster" "proj_redshift_cluster" {
+  cluster_identifier  = "proj-redshift-cluster"
+  master_username     = var.redshift_user
+  master_password     = var.redshift_password
+  port                = 5439
+  node_type           = var.redshift_node_type
+  cluster_type        = "single-node"
+  iam_roles           = [aws_iam_role.proj_redshift_iam_role.arn]
+  skip_final_snapshot = true
+}
 
+# Create Redshift spectrum schema
+provider "redshift" {
+  host     = aws_redshift_cluster.proj_redshift_cluster.dns_name
+  username = var.redshift_user
+  password = var.redshift_password
+  database = "dev"
+}
 
-#Set up EMR
-resource "aws_emr_cluster" "proj_emr_cluster" {
-  name                   = "proj_emr_cluster"
-  release_label          = "emr-6.5.0"
-  applications           = ["Spark", "Hadoop"]
-  scale_down_behavior    = "TERMINATE_AT_TASK_COMPLETION"
-  service_role           = "EMR_DefaultRole"
-  termination_protection = false
-  auto_termination_policy {
-    idle_timeout = var.auto_termination_timeoff
-  }
-
-  ec2_attributes {
-    instance_profile = aws_iam_instance_profile.proj_ec2_iam_role_instance_profile.id
-
-    subnet_id = aws_subnet.de_proj_2_public_subnet.id
-    key_name  = aws_key_pair.de_proj_2_auth.id
-
-    additional_master_security_groups = aws_security_group.de_proj_2_emr_sg.id
-    additional_slave_security_groups  = aws_security_group.de_proj_2_emr_sg.id
-  }
-
-
-  master_instance_group {
-    instance_type  = var.instance_type
-    instance_count = 1
-    name           = "Master - 1"
-
-    ebs_config {
-      size                 = 32
-      type                 = "gp2"
-      volumes_per_instance = 2
-    }
-  }
-
-  core_instance_group {
-    instance_type  = var.instance_type
-    instance_count = 2
-    name           = "Core - 2"
-
-    ebs_config {
-      size                 = "32"
-      type                 = "gp2"
-      volumes_per_instance = 2
+# External schema using AWS Glue Data Catalog
+resource "redshift_schema" "external_from_glue_data_catalog" {
+  name  = "spectrum"
+  owner = var.redshift_user
+  external_schema {
+    database_name = "spectrum"
+    data_catalog_source {
+      region                                 = var.aws_region
+      iam_role_arns                          = [aws_iam_role.proj_redshift_iam_role.arn]
+      create_external_database_if_not_exists = true
     }
   }
 }
+

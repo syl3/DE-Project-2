@@ -23,9 +23,9 @@ CSV_OUTFILE = f'{AIRFLOW_HOME}/{CSV_FILENAME}'
 PARQUET_OUTFILE = f'{AIRFLOW_HOME}/{PARQUET_FILENAME}'
 TABLE_NAME = 'songs'
 
-S3_BUCKET = Variable.get("S3_BUCKET")
+S3_BUCKET_NAME = Variable.get("S3_BUCKET_NAME")
 
-S3_PATH = f's3://{S3_BUCKET}/stage/songs/'
+S3_PATH = f's3://{S3_BUCKET_NAME}/stage/songs/'
 
 
 def convert_to_parquet(csv_file, parquet_file):
@@ -70,7 +70,7 @@ with DAG(
         op_kwargs={
             "file_name": PARQUET_OUTFILE,
             "key": f"stage/{TABLE_NAME}/{PARQUET_FILENAME}",
-            "bucket_name": S3_BUCKET,
+            "bucket_name": S3_BUCKET_NAME,
             "remove_local": "true",
         },
     )

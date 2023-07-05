@@ -1,4 +1,4 @@
-CREATE TABLE spectrum.page_view_events (
+CREATE TABLE spectrum.{{params.event}}_{{ logical_date.strftime("%m%d%H") }} (
     ts TIMESTAMP,
     page VARCHAR,
     auth VARCHAR,

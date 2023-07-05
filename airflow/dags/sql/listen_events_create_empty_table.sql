@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS dev.auth_events (
+CREATE TABLE IF NOT EXISTS dev.listen_events (
     -- Define your table columns here
     artist VARCHAR,
     song VARCHAR,

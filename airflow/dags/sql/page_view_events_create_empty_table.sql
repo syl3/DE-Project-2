@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS dev.auth_events (
+CREATE TABLE IF NOT EXISTS dev.page_view_events (
     -- Define your table columns here
     ts TIMESTAMP,
     page VARCHAR,

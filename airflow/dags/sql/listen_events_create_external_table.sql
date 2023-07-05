@@ -1,4 +1,4 @@
-CREATE TABLE spectrum.listen_events (
+CREATE TABLE spectrum.{{params.event}}_{{ logical_date.strftime("%m%d%H") }} (
     artist VARCHAR,
     song VARCHAR,
     duration DOUBLE PRECISION,

@@ -40,7 +40,7 @@ def create_empty_table(event: str):
     """
     task = RedshiftSQLOperator(
         task_id=f'{event}_create_empty_table',
-        sql=f"sql/{event}_create_external_table.sql",
+        sql=f"sql/{event}_create_empty_table.sql",
         redshift_conn_id="redshift",
     )
 

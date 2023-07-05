@@ -19,4 +19,4 @@ CREATE EXTERNAL TABLE spectrum.songs (
     title VARCHAR(100),
     track_id VARCHAR(100),
     year BIGINT
-) STORED AS PARQUET LOCATION '{{ params.bucket_name }}';
+) STORED AS PARQUET LOCATION '{{ params.s3_path }}';

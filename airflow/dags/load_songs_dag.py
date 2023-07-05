@@ -23,7 +23,7 @@ CSV_OUTFILE = f'{AIRFLOW_HOME}/{CSV_FILENAME}'
 PARQUET_OUTFILE = f'{AIRFLOW_HOME}/{PARQUET_FILENAME}'
 TABLE_NAME = 'songs'
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_BUCKET = Variable.get("S3_BUCKET")
 
 S3_PATH = f's3://{S3_BUCKET}/stage/songs/'
 

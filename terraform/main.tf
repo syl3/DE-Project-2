@@ -146,6 +146,27 @@ resource "aws_instance" "kafka" {
 }
 
 
+resource "aws_instance" "airflow" {
+  instance_type          = "t2.xlarge"
+  ami                    = data.aws_ami.server_ami.id
+  key_name               = aws_key_pair.de_proj_2_auth.id
+  vpc_security_group_ids = [aws_security_group.de_proj_2_sg.id]
+  subnet_id              = aws_subnet.de_proj_2_public_subnet.id
+  user_data              = file("userdata.tpl")
+
+  iam_instance_profile = aws_iam_instance_profile.proj_ec2_iam_role_instance_profile.id
+
+  root_block_device {
+    volume_size = 20
+  }
+
+  tags = {
+    Name = "airflow-node"
+  }
+
+}
+
+
 # Create our S3 bucket (Datalake)
 resource "aws_s3_bucket" "proj-data-lake" {
   bucket_prefix = var.bucket_prefix
@@ -181,75 +202,75 @@ resource "aws_s3_bucket_acl" "proj-data-lake-acl" {
 
 
 
-# resource "aws_security_group" "de_proj_2_emr_sg" {
-#   name        = "de_proj_2_emr_sg"
-#   description = "de_proj_2 emr security group"
-#   vpc_id      = aws_vpc.de_proj_2_vpc.id
+resource "aws_security_group" "de_proj_2_emr_sg" {
+  name        = "de_proj_2_emr_sg"
+  description = "de_proj_2 emr security group"
+  vpc_id      = aws_vpc.de_proj_2_vpc.id
 
-#   ingress {
-#     from_port   = 22
-#     to_port     = 22
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-# }
-
-
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
 
-# #Set up EMR
-# resource "aws_emr_cluster" "proj_emr_cluster" {
-#   name                   = "proj_emr_cluster"
-#   release_label          = "emr-6.5.0"
-#   applications           = ["Spark", "Hadoop"]
-#   scale_down_behavior    = "TERMINATE_AT_TASK_COMPLETION"
-#   service_role           = "EMR_DefaultRole"
-#   termination_protection = false
-#   auto_termination_policy {
-#     idle_timeout = var.auto_termination_timeoff
-#   }
-
-#   ec2_attributes {
-#     instance_profile = aws_iam_instance_profile.proj_ec2_iam_role_instance_profile.id
-
-#     subnet_id = aws_subnet.de_proj_2_public_subnet.id
-#     key_name  = aws_key_pair.de_proj_2_auth.id
-
-#     additional_master_security_groups = aws_security_group.de_proj_2_emr_sg.id
-#     additional_slave_security_groups  = aws_security_group.de_proj_2_emr_sg.id
-#   }
 
 
-#   master_instance_group {
-#     instance_type  = var.instance_type
-#     instance_count = 1
-#     name           = "Master - 1"
+#Set up EMR
+resource "aws_emr_cluster" "proj_emr_cluster" {
+  name                   = "proj_emr_cluster"
+  release_label          = "emr-6.5.0"
+  applications           = ["Spark", "Hadoop"]
+  scale_down_behavior    = "TERMINATE_AT_TASK_COMPLETION"
+  service_role           = "EMR_DefaultRole"
+  termination_protection = false
+  auto_termination_policy {
+    idle_timeout = var.auto_termination_timeoff
+  }
 
-#     ebs_config {
-#       size                 = 32
-#       type                 = "gp2"
-#       volumes_per_instance = 2
-#     }
-#   }
+  ec2_attributes {
+    instance_profile = aws_iam_instance_profile.proj_ec2_iam_role_instance_profile.id
 
-#   core_instance_group {
-#     instance_type  = var.instance_type
-#     instance_count = 2
-#     name           = "Core - 2"
+    subnet_id = aws_subnet.de_proj_2_public_subnet.id
+    key_name  = aws_key_pair.de_proj_2_auth.id
 
-#     ebs_config {
-#       size                 = "32"
-#       type                 = "gp2"
-#       volumes_per_instance = 2
-#     }
-#   }
-# }
+    additional_master_security_groups = aws_security_group.de_proj_2_emr_sg.id
+    additional_slave_security_groups  = aws_security_group.de_proj_2_emr_sg.id
+  }
+
+
+  master_instance_group {
+    instance_type  = var.instance_type
+    instance_count = 1
+    name           = "Master - 1"
+
+    ebs_config {
+      size                 = 32
+      type                 = "gp2"
+      volumes_per_instance = 2
+    }
+  }
+
+  core_instance_group {
+    instance_type  = var.instance_type
+    instance_count = 2
+    name           = "Core - 2"
+
+    ebs_config {
+      size                 = "32"
+      type                 = "gp2"
+      volumes_per_instance = 2
+    }
+  }
+}
 
 
 

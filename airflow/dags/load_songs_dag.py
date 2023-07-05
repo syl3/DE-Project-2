@@ -23,8 +23,9 @@ CSV_OUTFILE = f'{AIRFLOW_HOME}/{CSV_FILENAME}'
 PARQUET_OUTFILE = f'{AIRFLOW_HOME}/{PARQUET_FILENAME}'
 TABLE_NAME = 'songs'
 
-BUCKET_NAME = 'proj-data-lake-20230702185303463600000001'
-S3_PATH = f's3://{BUCKET_NAME}/stage/songs/'
+S3_BUCKET = os.environ.get('S3_BUCKET')
+
+S3_PATH = f's3://{S3_BUCKET}/stage/songs/'
 
 
 def convert_to_parquet(csv_file, parquet_file):
@@ -69,7 +70,7 @@ with DAG(
         op_kwargs={
             "file_name": PARQUET_OUTFILE,
             "key": f"stage/{TABLE_NAME}/{PARQUET_FILENAME}",
-            "bucket_name": BUCKET_NAME,
+            "bucket_name": S3_BUCKET,
             "remove_local": "true",
         },
     )
@@ -83,7 +84,7 @@ with DAG(
         dag=dag,
         task_id="create_external_table",
         sql="sql/create_external_table.sql",
-        params={'bucket_name': S3_PATH},
+        params={'s3_path': S3_PATH},
         redshift_conn_id="redshift",
     )
 

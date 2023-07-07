@@ -6,7 +6,7 @@ from airflow.models import Variable
 from schema import schema
 from task_templates import (
     create_external_table,
-    create_empty_table,
+    # create_empty_table,
     # insert_job,
     # delete_external_table,
 )
@@ -55,9 +55,9 @@ with DAG(
             S3_BUCKET_NAME,
         )
 
-        create_empty_table_task = create_empty_table(
-            event,
-        )
+        # create_empty_table_task = create_empty_table(
+        #     event,
+        # )
 
         # execute_insert_query_task = insert_job(
         #     event,
@@ -75,7 +75,7 @@ with DAG(
 
         (
             create_external_table_task
-            >> create_empty_table_task
+            # >> create_empty_table_task
             # >> execute_insert_query_task
             # >> delete_external_table_task
             # >> initate_dbt_task

@@ -1,18 +1,22 @@
-CREATE TABLE spectrum.{{params.event}}_{{ logical_date.strftime("%m%d%H") }} (
+CREATE EXTERNAL TABLE spectrum.{{params.event}} (
     artist VARCHAR,
     song VARCHAR,
     duration DOUBLE PRECISION,
     ts TIMESTAMP,
+    sessionid INTEGER,
     auth VARCHAR,
     level VARCHAR,
+    itemInSession INTEGER,
     city VARCHAR,
+    zip INTEGER,
     state VARCHAR,
     "userAgent" VARCHAR,
     lon DOUBLE PRECISION,
     lat DOUBLE PRECISION,
-    "userId" INTEGER,
+    userId BIGINT,
     "lastName" VARCHAR,
     "firstName" VARCHAR,
     gender VARCHAR,
-    registration INTEGER
-) STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }}/month={{ logical_date.strftime("%-m") }}/day={{ logical_date.strftime("%-d") }}/hour={{ logical_date.strftime("%-H") }}';
+    registration BIGINT,
+    year INTEGER
+) STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }};

@@ -22,4 +22,4 @@ CREATE EXTERNAL TABLE spectrum.{{params.event}} (
     song VARCHAR,
     duration DOUBLE PRECISION,
     year INTEGER
-) STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }};
+) STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }}';

@@ -16,4 +16,4 @@ CREATE EXTERNAL TABLE spectrum.{{params.event}} (
     registration BIGINT,
     success BOOLEAN,
     year INTEGER
-) STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }};
+) STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }}';

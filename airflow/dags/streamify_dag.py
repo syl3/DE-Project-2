@@ -4,12 +4,7 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.models import Variable
 from schema import schema
-from task_templates import (
-    create_external_table,
-    # create_empty_table,
-    # insert_job,
-    # delete_external_table,
-)
+from task_templates import create_external_table
 
 
 EVENTS = [
@@ -33,21 +28,18 @@ with DAG(
     max_active_runs=1,
     tags=['streamify'],
 ) as dag:
-    # initate_dbt_task = BashOperator(
-    #     task_id='dbt_initiate',
-    #     bash_command='cd /dbt && dbt deps && dbt seed --select state_codes --profiles-dir . --target prod',
-    # )
+    initate_dbt_task = BashOperator(
+        task_id='dbt_initiate',
+        bash_command='cd /dbt && dbt deps && dbt seed --select state_codes --profiles-dir . --target prod',
+    )
 
-    # execute_dbt_task = BashOperator(
-    #     task_id='dbt_streamify_run',
-    #     bash_command='cd /dbt && dbt deps && dbt run --profiles-dir . --target prod',
-    # )
+    execute_dbt_task = BashOperator(
+        task_id='dbt_streamify_run',
+        bash_command='cd /dbt && dbt deps && dbt run --profiles-dir . --target prod',
+    )
 
     for event in EVENTS:
         staging_table_name = event
-        insert_query = (
-            f"{{% include 'sql/{event}.sql' %}}"  # extra {} for f-strings escape
-        )
         events_schema = schema[event]
 
         create_external_table_task = create_external_table(
@@ -55,29 +47,4 @@ with DAG(
             S3_BUCKET_NAME,
         )
 
-        # create_empty_table_task = create_empty_table(
-        #     event,
-        # )
-
-        # execute_insert_query_task = insert_job(
-        #     event,
-        #     insert_query,
-        #     BIGQUERY_DATASET,
-        #     # GCP_PROJECT_ID
-        # )
-
-        # delete_external_table_task = delete_external_table(
-        #     event,
-        #     # GCP_PROJECT_ID,
-        #     BIGQUERY_DATASET,
-        #     external_table_name,
-        # )
-
-        (
-            create_external_table_task
-            # >> create_empty_table_task
-            # >> execute_insert_query_task
-            # >> delete_external_table_task
-            # >> initate_dbt_task
-            # >> execute_dbt_task
-        )
+        (create_external_table_task >> initate_dbt_task >> execute_dbt_task)

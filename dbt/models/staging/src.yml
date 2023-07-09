@@ -1,0 +1,7 @@
+version: 2
+
+sources:
+  - name: dbt_example
+    #database: 
+    tables:
+      - name: listen_events

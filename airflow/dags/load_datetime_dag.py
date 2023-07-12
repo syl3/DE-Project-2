@@ -80,7 +80,7 @@ def upload_to_s3(bucket_name: str, key: str, file_name: str) -> None:
 
 
 with DAG(
-    dag_id=f'load_songs_dag',
+    dag_id='load_datetime_dag',
     default_args=default_args,
     description=f'Execute only once to create songs table in bigquery',
     schedule_interval="@once",  # At the 5th minute of every hour

@@ -1,4 +1,4 @@
-{{ config (MATERIALIZED = 'table') }} 
+{{ config (materialized = 'table') }} 
 -- level column in the users dimension is considered to be a SCD2 change. Just for the purpose of learning to write SCD2 change queries.
 -- The below query is constructed to accommodate changing levels from free to paid and maintaining the latest state of the user along with
 -- historical record of the user's level

@@ -1,4 +1,4 @@
-{{ config (MATERIALIZED = 'table') }} 
+{{ config (materialized = 'table') }} 
 WITH songs AS (
     SELECT song_id,
         REPLACE(REPLACE(artist_name, '"', ''), '\\', '') AS artist_name,
@@ -10,7 +10,7 @@ WITH songs AS (
         tempo,
         title,
         year
-    FROM {{ ref ('songs') }}
+    FROM {{ ref ('stg_songs') }}
     UNION ALL
     (
         SELECT 'NNNNNNNNNNNNNNNNNNN',

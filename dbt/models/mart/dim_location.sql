@@ -1,4 +1,4 @@
-{{ config (MATERIALIZED = 'table') }} 
+{{ config (materialized = 'table') }} 
 WITH listen_events AS (
     SELECT *
     FROM {{ ref ('stg_listen_events') }}

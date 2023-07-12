@@ -19,4 +19,6 @@ CREATE EXTERNAL TABLE spectrum.{{params.event}} (
     gender VARCHAR,
     registration BIGINT,
     year INTEGER
-) STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }}';
+)
+PARTITIONED BY (ts_partition CHAR(10)) 
+STORED AS PARQUET LOCATION 's3://{{params.s3_bucket_name}}/{{ params.event }}';

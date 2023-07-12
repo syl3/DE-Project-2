@@ -26,3 +26,30 @@ def create_external_table(
     )
 
     return task
+
+
+def add_partition(
+    event: str,
+    s3_bucket_name: str,
+):
+    """
+    Add partition an external table using the RedshiftSQLOperator
+
+    Parameters :
+        event : str
+        s3_bucket_name : str
+
+    Returns :
+        task
+    """
+    task = RedshiftSQLOperator(
+        task_id=f'{event}_add_partition',
+        sql=f"sql/add_partition.sql",
+        params={
+            'event': event,
+            's3_bucket_name': s3_bucket_name,
+        },
+        redshift_conn_id="redshift",
+    )
+
+    return task

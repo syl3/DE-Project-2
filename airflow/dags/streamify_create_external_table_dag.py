@@ -17,7 +17,7 @@ S3_BUCKET_NAME = Variable.get("S3_BUCKET_NAME")
 default_args = {'owner': 'airflow'}
 
 with DAG(
-    dag_id=f'streamify_dag',
+    dag_id='streamify_create_external_table_dag',
     default_args=default_args,
     description=f'Hourly data pipeline to generate dims and facts for streamify',
     schedule_interval="@once",  # At the 5th minute of every hour

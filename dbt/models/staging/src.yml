@@ -5,3 +5,8 @@ sources:
     #database: 
     tables:
       - name: listen_events
+  - name: test
+    database: dev
+    schema: spectrum
+    tables:
+      - name: auth_events

@@ -1,8 +1,10 @@
+{{ config(materialized='view', bind=False) }}
+
 WITH source AS (
     SELECT
         *
     FROM
-        {{ source ('dbt_example', 'listen_events') }}
+        {{ source ('redshift_spectrum', 'listen_events') }}
 ),
 staged AS (
     SELECT

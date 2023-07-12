@@ -5,7 +5,7 @@ WITH songs AS (
         MAX(artist_longitude) AS longitude,
         MAX(artist_location) AS location,
         REPLACE(REPLACE(artist_name, '"', ''), '\\', '') AS name
-    FROM {{ ref('songs') }}
+    FROM {{ ref('stg_songs') }}
     GROUP BY artist_name
     UNION ALL
     SELECT 'NNNNNNNNNNNNNNN',

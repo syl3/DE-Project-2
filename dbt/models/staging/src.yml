@@ -8,3 +8,4 @@ sources:
       - name: auth_events
       - name: songs
       - name: listen_events
+      - name: datetime

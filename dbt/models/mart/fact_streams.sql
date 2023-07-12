@@ -21,5 +21,5 @@ SELECT
     ON REPLACE(REPLACE(listen_events.artist, '"', ''), '\\', '') = dim_songs.artist_name AND listen_events.song = dim_songs.title
   LEFT JOIN {{ ref('dim_location') }} 
     ON listen_events.city = dim_location.city AND listen_events.state = dim_location.state_code AND listen_events.lat = dim_location.latitude AND listen_events.lon = dim_location.longitude 
-  LEFT JOIN {{ ref('dim_datetime') }} 
+  LEFT JOIN {{ source ('redshift_spectrum', 'datetime') }}
     ON dim_datetime.date = to_char(listen_events.ts, 'YYYY-MM-DD HH24:00:00.000')::timestamp

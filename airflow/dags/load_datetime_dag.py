@@ -50,8 +50,8 @@ def create_datetime_data():
     )
 
     # generate data
-    data['date_key'] = data['date'].apply(datetime.timestamp).astype(int)
     data['date'] = date_range
+    data['date_key'] = data['date'].apply(datetime.timestamp).astype(int)
     data['day_of_week'] = data['date'].dt.dayofweek
     data['day_of_month'] = data['date'].dt.day
     data['week_of_year'] = data['date'].dt.isocalendar().week

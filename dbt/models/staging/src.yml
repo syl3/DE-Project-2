@@ -1,12 +1,10 @@
 version: 2
 
 sources:
-  - name: dbt_example
-    #database: 
-    tables:
-      - name: listen_events
-  - name: test
+  - name: redshift_spectrum
     database: dev
     schema: spectrum
     tables:
       - name: auth_events
+      - name: songs
+      - name: listen_events

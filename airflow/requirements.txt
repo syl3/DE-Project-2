@@ -1,6 +1,6 @@
-apache-airflow-providers-amazon
-pyarrow
-pandas
-sqlalchemy
-psycopg2-binary
-dbt-redshift
+apache-airflow-providers-amazon==6.0.0
+pyarrow==6.0.1
+pandas==1.5.1
+sqlalchemy==1.4.27
+psycopg2-binary==2.9.6
+dbt-redshift==1.4.0

@@ -21,17 +21,19 @@ listen_events__where_level_change AS (
     -- Lag the level and see where the user changes level from free to paid or otherwise
     SELECT
         *,
-        CASE WHEN LAG(level, 1, 'NA') OVER (PARTITION BY user_id,
+        CASE WHEN LAG(level, 1) OVER (PARTITION BY user_id,
             first_name,
             last_name,
-            gender ORDER BY date) <> level THEN
+            gender ORDER BY date) <> level 
+        THEN
             1
         ELSE
             0
         END AS lagged
     FROM
         listen_events
-),
+)
+,
 listen_events__group AS (
     -- Create distinct group of each level change to identify the change in level accurately
     SELECT
@@ -39,10 +41,12 @@ listen_events__group AS (
         SUM(lagged) OVER (PARTITION BY user_id,
             first_name,
             last_name,
-            gender ORDER BY date) AS grouped
+            gender ORDER BY date
+            rows between unbounded preceding and current row) AS grouped
     FROM
         listen_events__where_level_change
-),
+)
+,
 listen_events__find_min_date_within_group AS (
     -- Find the earliest date available for each free/paid status change
     SELECT
@@ -64,7 +68,8 @@ listen_events__find_min_date_within_group AS (
         registration,
         level,
         grouped
-),
+)
+,
 listen_events__assign_flag__activation_date__expiration_date AS (
     SELECT
         CAST(user_id AS bigint) AS user_id,
@@ -75,10 +80,18 @@ listen_events__assign_flag__activation_date__expiration_date AS (
         CAST(registration AS bigint) AS registration,
         mindate AS row_activation_date,
         -- Choose the start date from the next record and add that as the expiration date for the current record
-        LEAD(minDate, 1, '9999-12-31') OVER (PARTITION BY user_id,
+        CASE WHEN LEAD(minDate, 1) OVER (PARTITION BY user_id,
             first_name,
             last_name,
-            gender ORDER BY grouped) AS row_expiration_date,
+            gender ORDER BY grouped) IS NULL THEN '9999-12-31'
+            WHEN LEAD(minDate, 1) OVER (PARTITION BY user_id,
+            first_name,
+            last_name,
+            gender ORDER BY grouped) IS NOT NULL THEN LEAD(minDate, 1) OVER (PARTITION BY user_id,
+            first_name,
+            last_name,
+            gender ORDER BY grouped)
+        END AS row_expiration_date,
         -- Assign a flag indicating which is the latest row for easier select queries
         CASE WHEN RANK() OVER (PARTITION BY user_id,
             first_name,
@@ -93,7 +106,7 @@ listen_events__assign_flag__activation_date__expiration_date AS (
 ),
 final AS (
     SELECT
-        {{ dbt_utils.surrogate_key (['user_id', 'row_activation_date', 'level']) }} AS user_key,
+        md5(cast(coalesce(cast(user_id as varchar), '') || '-' || coalesce(cast(row_activation_date as varchar), '') || '-' || coalesce(cast(level as varchar), '') as varchar)) AS user_key,
         *
     FROM
         listen_events__assign_flag__activation_date__expiration_date

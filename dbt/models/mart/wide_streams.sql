@@ -31,5 +31,5 @@ FROM {{ ref('fact_streams') }}
     JOIN {{ ref('dim_users') }} ON fact_streams.user_key = dim_users.user_key
     JOIN {{ ref('dim_songs') }} ON fact_streams.song_key = dim_songs.song_key
     JOIN {{ ref('dim_location') }} ON fact_streams.location_key = dim_location.location_key
-    JOIN {{ ref('dim_datetime') }} ON fact_streams.date_key = dim_datetime.date_key
+    JOIN {{ source ('redshift_spectrum', 'datetime') }} ON fact_streams.date_key = dim_datetime.date_key
     JOIN {{ ref('dim_artists') }} ON fact_streams.artist_key = dim_artists.artist_key

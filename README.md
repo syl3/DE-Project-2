@@ -11,6 +11,8 @@ In this repository, I replaced the original GCP infrastructure with AWS infrastr
 
 # Result
 ![Alt text](img/metabase_dashboard.png?raw=true "Metabase")
+![Alt text](img/lineage_graph.png?raw=true "Lineage Graph")
+![Alt text](img/dbt_docs.png?raw=true "dbt docs")
 ![Alt text](img/airflow.png?raw=true "Airflow")
 
 

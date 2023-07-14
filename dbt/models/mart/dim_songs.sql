@@ -1,6 +1,8 @@
 {{ config (materialized = 'table') }} 
 WITH songs AS (
-    SELECT song_id,
+    SELECT 
+        artist_id,
+        song_id,
         REPLACE(REPLACE(artist_name, '"', ''), '\\', '') AS artist_name,
         duration,
         key,
@@ -13,7 +15,9 @@ WITH songs AS (
     FROM {{ ref ('stg_songs') }}
     UNION ALL
     (
-        SELECT 'NNNNNNNNNNNNNNNNNNN',
+        SELECT 
+            'NNNNNNNNNNNNNNNNNNN',
+            'NNNNNNNNNNNNNNNNNNN',
             'NA',
             0,
             -1,
@@ -26,7 +30,7 @@ WITH songs AS (
     )
 ),
 final AS (
-    SELECT {{ dbt_utils.surrogate_key (['song_id']) }} AS song_key,
+    SELECT {{ dbt_utils.surrogate_key (['song_id','artist_id']) }} AS song_key,
         *
     FROM songs
 )

@@ -6,7 +6,7 @@ WITH songs AS (
         MAX(artist_location) AS location,
         REPLACE(REPLACE(artist_name, '"', ''), '\\', '') AS name
     FROM {{ ref('stg_songs') }}
-    GROUP BY artist_name
+    GROUP BY REPLACE(REPLACE(artist_name, '"', ''), '\\', '')
     UNION ALL
     SELECT 'NNNNNNNNNNNNNNN',
         0,
@@ -15,7 +15,7 @@ WITH songs AS (
         'NA'
 ),
 final AS (
-    SELECT {{ dbt_utils.surrogate_key(['artist_id']) }} AS artist_key,
+    SELECT {{ dbt_utils.surrogate_key(['artist_id','name']) }} AS artist_key,
         *
     FROM songs
 )

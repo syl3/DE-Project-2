@@ -3,7 +3,7 @@
 WITH listen_events AS (
     SELECT *
     FROM {{ ref('stg_listen_events') }}
-),
+)
 SELECT
     dim_users.user_key,
     dim_artists.artist_key,
